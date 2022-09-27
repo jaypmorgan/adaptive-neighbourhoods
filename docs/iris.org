@@ -1,0 +1,67 @@
+#+title: Adaptive Neighbourhoods with Iris
+#+author: Jay Morgan
+#+property: header-args:python :session :dir ../
+
+#+name: savefig
+#+begin_src python :exports none :results value :var figname="/tmp/plot.png"
+f"""plt.savefig('{figname}')
+plt.close()
+'{figname}'"""
+#+end_src
+
+#+RESULTS: savefig
+: plt.savefig('/tmp/plot.png')
+: plt.close()
+: '/tmp/plot.png'
+
+#+begin_src python
+from sklearn.datasets import load_iris
+X, y = load_iris(return_X_y=True)
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python :results value file replace :exports both :noweb strip-export
+import matplotlib.pyplot as plt
+#from adaptive_neighbourhoods import epsilon_expand
+
+radiis = list(epsilon_expand(X, y, iterative=True, step_size=0.05))
+fig, ax = plt.subplots()
+colors = {0:"red", 1:"blue", 2:"green"}
+ax.scatter(X[:,0], X[:,1], c=[colors[yi] for yi in y])
+for x in range(X.shape[0]):
+    ax.add_patch(
+        plt.Circle((X[x,0], X[x,1]), radiis[-1][x], facecolor="none", edgecolor="b"))
+<<savefig(figname="docs/iris_1.png")>>
+#+end_src
+
+#+ATTR_ORG: :width 500px
+#+RESULTS:
+[[file:iris_1.png]]
+
+#+begin_src python
+from matplotlib import patches, animation
+
+fig = plt.figure()
+plt.scatter(X[:,0], X[:,1], c=[colors[yi] for yi in y])
+ax = plt.gca()
+
+def init():
+    return []
+
+def animate(i):
+    patches = []
+    for x in range(X.shape[0]):
+        patches.append(
+            ax.add_patch(
+                plt.Circle((X[x,0], X[x,1]), radiis[i][x], facecolor="none", edgecolor="b")))
+    return patches
+
+anim = animation.FuncAnimation(
+    fig, animate, init_func=init,
+    frames=len(radiis), blit=True)
+plt.show()
+#+end_src
+
+#+RESULTS:
+: None

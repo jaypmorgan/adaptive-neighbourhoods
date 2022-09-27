@@ -1,0 +1,37 @@
+name: adpt
+channels:
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1
+  - _openmp_mutex=5.1
+  - ca-certificates=2022.07.19
+  - certifi=2022.9.14
+  - ld_impl_linux-64=2.38
+  - libffi=3.3
+  - libgcc-ng=11.2.0
+  - libgomp=11.2.0
+  - libstdcxx-ng=11.2.0
+  - ncurses=6.3
+  - openssl=1.1.1q
+  - pip=22.1.2
+  - python=3.7.13
+  - readline=8.1.2
+  - setuptools=63.4.1
+  - sqlite=3.39.2
+  - tk=8.6.12
+  - wheel=0.37.1
+  - xz=5.2.5
+  - zlib=1.2.12
+  - pip:
+    - absl-py==1.2.0
+    - etils==0.8.0
+    - importlib-resources==5.9.0
+    - jax==0.3.17
+    - jaxlib==0.3.15+cuda11.cudnn82
+    - nodeenv==1.7.0
+    - numpy==1.21.6
+    - opt-einsum==3.3.0
+    - scipy==1.7.3
+    - typing-extensions==4.3.0
+    - zipp==3.8.1
+prefix: /home/jay/.bin/miniconda3/envs/adpt
