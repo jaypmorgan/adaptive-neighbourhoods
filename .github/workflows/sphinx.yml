@@ -17,7 +17,7 @@ jobs:
       - name: Upgrade pip
         run: python3 -m pip install --upgrade pip
       - name: Install dependancies
-        run: python3 -m pip install -f ./docs/requirements.txt
+        run: python3 -m pip install -r ./docs/requirements.txt
       - name: Build documentation
         run: make docs
       - name: Deploy documentation
