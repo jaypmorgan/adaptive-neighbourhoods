@@ -26,7 +26,7 @@ from adaptive_neighbourhoods import epsilon_expand
 
 neighbourhoods = epsilon_expand(
     x,  # your input data
-	y)  # the integer encoded labels for your data
+    y)  # the integer encoded labels for your data
 ```
 
 Move information on the variable parameters and general guidance on using this package can be found at: https://jaypmorgan.github.io/adaptive-neighbourhoods/
