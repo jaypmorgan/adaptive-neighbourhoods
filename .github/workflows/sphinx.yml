@@ -1,13 +1,11 @@
 name: github pages
-
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup Python
@@ -23,5 +21,7 @@ jobs:
       - name: Deploy documentation
         uses: peaceiris/actions-gh-pages@v3
         with:
+          publish_branche: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build-docs
+          publish_dir: ./build-docs/
+          force_orphan: true
