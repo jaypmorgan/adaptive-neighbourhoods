@@ -5,9 +5,9 @@
 Python API for generating adapted and unique neighbourhoods for
 searching for adversarial examples
 
-[![PyPI version](https://badge.fury.io/py/adaptive-neighbourhoods.svg)](https://pypi.python.org/pypi/adaptive-neighbourhoods/)
-[![GitHub license](https://img.shields.io/github/license/jaypmorgan/adaptive-neighbourhoods.svg)](https://github.com/jaypmorgan/adaptive-neighbourhoods/blob/master/LICENSE)
-[![https://jaypmorgan.github.io/adaptive-neighbourhoods/](https://img.shields.io/badge/ReadThe-Docs-blue)](https://jaypmorgan.github.io/adaptive-neighbourhoods/)
+[![PyPI](https://img.shields.io/pypi/v/adaptive-neighbourhoods?style=flat-square&color=green)](https://pypi.python.org/pypi/adaptive-neighbourhoods/)
+[![GitHub license](https://img.shields.io/github/license/jaypmorgan/adaptive-neighbourhoods.svg?style=flat-square)](https://github.com/jaypmorgan/adaptive-neighbourhoods/blob/master/LICENSE)
+[![https://jaypmorgan.github.io/adaptive-neighbourhoods/](https://img.shields.io/badge/ReadThe-Docs-blue?style=flat-square)](https://jaypmorgan.github.io/adaptive-neighbourhoods/)
 
 </div>
 
