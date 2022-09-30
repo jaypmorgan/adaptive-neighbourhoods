@@ -1,11 +1,37 @@
+<div style="width:70%;margin: 0 auto;text-align:center;">
+
 ## Adaptive Neighbourhoods for the Discovery of Adversarial Examples
+
+[![PyPI version](https://badge.fury.io/py/adaptive-neighbourhoods.svg)](https://pypi.python.org/pypi/adaptive-neighbourhoods/)
+[![GitHub license](https://img.shields.io/github/license/jaypmorgan/adaptive-neighbourhoods.svg)](https://github.com/jaypmorgan/adaptive-neighbourhoods/blob/master/LICENSE)
+[![https://jaypmorgan.github.io/adaptive-neighbourhoods/](https://img.shields.io/badge/ReadThe-Docs-blue)](https://jaypmorgan.github.io/adaptive-neighbourhoods/)
+
+</div>
+
+---
 
 Python API for generating adapted and unique neighbourhoods for
 searching for adversarial examples
 
-## Installation
+## Installation & usage
 
-## Usage
+This work is released on PyPi. Installation, therefore, is as simple as installing the package with pip:
+
+```bash
+python3 -m pip install adaptive-neighbourhoods
+```
+
+At this point, you're free to start generating neighbourhoods for your own dataset:
+
+```python
+from adaptive_neighbourhoods import epsilon_expand
+
+neighbourhoods = epsilon_expand(
+    x,  # your input data
+	y)  # the integer encoded labels for your data
+```
+
+Move information on the variable parameters and general guidance on using this package can be found at: https://jaypmorgan.github.io/adaptive-neighbourhoods/
 
 ## Contributing
 

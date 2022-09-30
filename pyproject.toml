@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "adaptive_neighbourhoods"
+version = "0.0.1"
+authors = [
+  {name="Jay Morgan", email="jaymiles17@gmail.com"},
+  {name="Adeline Paiement"},
+  {name="Arno Pauly"},
+  {name="Monika Seisenberger"},
+]
+description = "Python API for generating adapted and unique neighbourhoods for searching for adversarial examples."
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/jaypmorgan/adaptive-neighbourhoods"
+"Bug Tracker" = "https://github.com/jaypmorgan/adaptive-neighbourhoods/issues"
