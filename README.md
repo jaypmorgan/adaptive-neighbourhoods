@@ -1,17 +1,15 @@
-<div style="width:70%;margin: 0 auto;text-align:center;">
+<p align="center">
 
 ## Adaptive Neighbourhoods for the Discovery of Adversarial Examples
+
+Python API for generating adapted and unique neighbourhoods for
+searching for adversarial examples
 
 [![PyPI version](https://badge.fury.io/py/adaptive-neighbourhoods.svg)](https://pypi.python.org/pypi/adaptive-neighbourhoods/)
 [![GitHub license](https://img.shields.io/github/license/jaypmorgan/adaptive-neighbourhoods.svg)](https://github.com/jaypmorgan/adaptive-neighbourhoods/blob/master/LICENSE)
 [![https://jaypmorgan.github.io/adaptive-neighbourhoods/](https://img.shields.io/badge/ReadThe-Docs-blue)](https://jaypmorgan.github.io/adaptive-neighbourhoods/)
 
-</div>
-
----
-
-Python API for generating adapted and unique neighbourhoods for
-searching for adversarial examples
+</p>
 
 ## Installation & usage
 
