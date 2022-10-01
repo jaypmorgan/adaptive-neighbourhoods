@@ -29,7 +29,7 @@ neighbourhoods = epsilon_expand(
     y)  # the integer encoded labels for your data
 ```
 
-Move information on the variable parameters and general guidance on using this package can be found at: https://jaypmorgan.github.io/adaptive-neighbourhoods/
+Move information on the variable parameters and general guidance on using this package can be found at: https://adaptive-neighbourhoods.readthedocs.io/en/latest/
 
 ## Contributing
 
