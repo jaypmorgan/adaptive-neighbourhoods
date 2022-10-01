@@ -1,5 +1,7 @@
 <div align="center">
 
+![](./docs/logo.png)
+
 ## Adaptive Neighbourhoods for the Discovery<br/> of Adversarial Examples
 
 Python API for generating adapted and unique neighbourhoods for
