@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "adaptive_neighbourhoods"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   {name="Jay Morgan", email="jaymiles17@gmail.com"},
   {name="Adeline Paiement"},

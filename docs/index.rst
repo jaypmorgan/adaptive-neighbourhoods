@@ -10,11 +10,18 @@ This is the documentation for the Adaptive Neighbourhoods algorithm.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: First steps
 
    installation
    examples
-   api
+
+.. toctree::
+   :maxdepth: 2
+   1. :caption: In depth
+	     
+   2. api
+      performance
+   contributing
 
 
 
