@@ -8,7 +8,7 @@
 #include "vector_ops.h"
 #include "radial_basis.h"
 
-#define DEBUG
+// # define DEBUG
 
 // namespace alias
 namespace py = pybind11;
@@ -92,7 +92,8 @@ std::vector<float> epsilon_expand(
     Mat x,
     std::vector<int> y,
     float step_size = 0.0001,
-    float epsilon   = 5.0)
+    float epsilon   = 5.0,
+    bool show_progress = false)
 {
 
     // compute the indexes of each of the different classes
@@ -151,10 +152,11 @@ std::vector<float> epsilon_expand(
             radius[idx] += step_sizes[idx];
         }
 
-        std::cout << "\rStep: " << step 
-                  << " Number of touching " << vector_find_element(touching, true).size()
-                  <<"  Max radius " << vector_max(radius) 
-                  << std::flush;
+        if (show_progress)
+            std::cout << "\rStep: " << step 
+                    << " Number of touching " << vector_find_element(touching, true).size()
+                    <<"  Max radius " << vector_max(radius) 
+                    << std::flush;
     }
 
     return radius;
@@ -167,10 +169,11 @@ py::array_t<float> wrapper(
     Mat x, 
     std::vector<int> y,
     float step_size = 0.0001,
-    float epsilon   = 5.0) 
+    float epsilon   = 5.0,
+    bool show_progress = false) 
 {
     py::array result = py::cast(
-        epsilon_expand(x, y, step_size, epsilon));
+        epsilon_expand(x, y, step_size, epsilon, show_progress));
     return result;
 }
 
@@ -179,7 +182,8 @@ PYBIND11_MODULE(adaptive_neighbourhoods, m)
 {
     m.doc() = "Adaptive Neighbourhoods package";
     m.def("epsilon_expand", &wrapper, "Generate the neighbourhoods",
-          py::arg("x"), py::arg("y"), py::arg("step_size") = 0.0001, py::arg("epsilon") = 5.0);
+          py::arg("x"), py::arg("y"), py::arg("step_size") = 0.0001, py::arg("epsilon") = 5.0,
+          py::arg("show_progress") = false);
 }
 
 

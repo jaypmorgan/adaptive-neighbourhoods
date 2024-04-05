@@ -4,7 +4,7 @@ docs:
 
 .PHONY: install
 install:
-	python3 -m pip install .
+	python3 -m pip install -e .
 
 .PHONY: build
 build:
