@@ -40,7 +40,7 @@ Vec compute_density(Mat x, std::vector<int> y, float epsilon, std::vector<std::v
             if (i != j)
                 tmp_d += rbf_inverse_multiquadric(xi, x.at(j), epsilon); 
         }
-        tmp_d = 1 - (tmp_d / x.size());
+        tmp_d = (tmp_d / same_class_index.size());  // TODO: over class or over samples?
         d.push_back(tmp_d);
     }
 

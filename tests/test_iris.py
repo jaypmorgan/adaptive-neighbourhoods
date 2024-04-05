@@ -11,15 +11,15 @@ x = iris.drop(columns='species').to_numpy()
 y = np.array([mapper[i] for i in iris['species'].tolist()])
 c = [color_mapper[i] for i in y]
 
-radius = epsilon_expand(x, y, step_size=0.01)
+radius = epsilon_expand(x[:, 0:1], y, step_size=0.15)  # TODO: Step size should be minimum distance to other class?
 
 circles = []
 for xi, yi, r in zip(x[:, 0], x[:, 1], radius):
     circles.append(
-        plt.Circle((xi, yi), r, color='black', fill=False)
+        plt.Circle((xi, yi), r, color='black', linewidth=0.2, fill=False)
     )
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(10, 8))
 ax.scatter(x[:, 0], x[:, 1], c=c)
 for circle in circles:
     ax.add_patch(circle)
