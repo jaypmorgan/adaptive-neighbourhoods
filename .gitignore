@@ -133,3 +133,4 @@ dmypy.json
 .vscoce
 compile_commands.json
 .vscode/
+iris.data

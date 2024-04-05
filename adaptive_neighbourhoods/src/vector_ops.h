@@ -108,4 +108,38 @@ T vector_norm(std::vector<T> u, int power = 2)
     return result;
 }
 
+template <typename T>
+std::vector<T> vector_fill(size_t size, T value)
+{
+    std::vector<T> result{};
+    for (size_t i = 0; i < size; i++) {
+        result.push_back(value);
+    }
+    return result;
+}
+
+template <typename T>
+std::vector<T> vector_zeros(size_t size) 
+{
+    return vector_fill<T>(size, 0);
+}
+
+template <typename T>
+std::vector<T> vector_scale(std::vector<T> u, T scalar)
+{
+    std::vector<T> result{};
+    for (auto& el : u)
+        result.push_back(el * scalar);
+    return result;
+}
+
+template <typename T>
+std::vector<T> vector_scale(std::vector<T> u, std::vector<T> v)
+{
+    std::vector<T> result{};
+    for (int i = 0; i < u.size(); i++)
+        result.push_back(u[i]*v[i]);
+    return result;
+}
+
 #endif
