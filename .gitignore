@@ -128,3 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /build-docs/
+
+.xmake
+.vscoce
+compile_commands.json
+.vscode/
+iris.data
