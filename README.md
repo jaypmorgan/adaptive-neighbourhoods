@@ -52,7 +52,7 @@ article using the following bibtex entry:
 
 ```
 @article{DBLP:journals/corr/abs-2101-09108,
-  author    = {Jay Morgan and
+  author    = {Jay Paul Morgan and
                Adeline Paiement and
                Arno Pauly and
                Monika Seisenberger},

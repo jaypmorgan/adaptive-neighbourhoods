@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adaptive_neighbourhoods"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
-  {name="Jay Morgan", email="jaymiles17@gmail.com"},
+  {name="Jay Paul Morgan", email="j.p.morgan@swansea.ac.uk"},
   {name="Adeline Paiement"},
   {name="Arno Pauly"},
   {name="Monika Seisenberger"},

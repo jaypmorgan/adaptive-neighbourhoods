@@ -22,6 +22,15 @@ std::vector<T> vector_sub(std::vector<T> u, std::vector<T> v)
 }
 
 template <typename T>
+T vector_sum(std::vector<T> u)
+{
+  T sum = 0;
+  for (const auto& el : u)
+    sum += el;
+  return sum;
+}
+
+template <typename T>
 std::string vector_print(std::vector<T> u)
 {
     std::ostringstream oss;

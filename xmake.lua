@@ -1,3 +1,4 @@
+add_requires("python 3.x")
 add_requires("pybind11")
 
 target("main")
@@ -6,4 +7,3 @@ target("main")
     add_files("src/*.cpp")
     set_languages("c++11")
     add_packages("pybind11")
-
