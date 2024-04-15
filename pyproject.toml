@@ -23,3 +23,13 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/jaypmorgan/adaptive-neighbourhoods"
 "Bug Tracker" = "https://github.com/jaypmorgan/adaptive-neighbourhoods/issues"
+
+[project.optional-dependencies]
+dev = [
+    "pandas",
+    "numpy",
+    "matplotlib",
+    "PyQt5",
+    "torch",
+    "torchvision",
+]

@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include <fstream>
+#include <random>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
@@ -52,17 +53,16 @@ Vec compute_density(Mat x, std::vector<int> y, float epsilon, std::vector<std::v
 
 float distance(std::vector<float> u, std::vector<float> v, float r1, float r2)
 {
-  return sqrt(vector_norm(vector_sub<float>(u, v))) - (r1 + r2);
+  return sqrt(rbf_basis(u, v)) - (r1 + r2);
 }
 
 bool intersects(std::vector<float> u, std::vector<float> v, float r1, float r2)
 {
-  float distance = rbf_basis(u, v);
+  float distance = sqrt(rbf_basis(u, v));
   return distance < (r1 + r2);
 }
 
-std::vector<bool> is_touching(
-                              Mat x,
+std::vector<bool> is_touching(Mat x,
                               std::vector<int> y,
                               std::vector<float> radius,
                               std::vector<bool> touching,
@@ -79,16 +79,14 @@ std::vector<bool> is_touching(
     if (!touching[i]) {  // skip those that are already touching something
       cls = y[i];
       cls_indexes = diff_class_indexes[cls];
-      for (auto& j : cls_indexes) {
-        if (i != j) {   // skip self (always touching self...)
-          xi = x[i];
-          xj = x[j];
-          r1 = radius[i];
-          r2 = radius[j];
-          if (intersects(xi, xj, r1, r2)) {
-            touching[i] = true;
-            touching[j] = true;
-          }
+      for (const auto& j : cls_indexes) {
+        xi = x[i];
+        xj = x[j];
+        r1 = radius[i];
+        r2 = radius[j];
+        if (intersects(xi, xj, r1, r2)) {
+          touching[i] = true;
+          touching[j] = true;
         }
       }
     }
@@ -96,7 +94,7 @@ std::vector<bool> is_touching(
   return touching;
 }
 
-float decay(float density, int steps)
+float decay_density(float density, int steps)
 {
   return exp(-(density + steps)); // TODO: Add decay e^(-p_c(i) * xi * n)
 }
@@ -104,7 +102,7 @@ float decay(float density, int steps)
 std::vector<float> epsilon_expand(
                                   Mat x,
                                   std::vector<int> y,
-                                  float step_size = 0.0001,
+                                  float max_step_size = 0.0001,
                                   float epsilon   = 5.0,
                                   bool show_progress = false)
 {
@@ -146,7 +144,22 @@ std::vector<float> epsilon_expand(
   std::vector<bool> touching{ vector_zeros<bool>(x.size()) };
   std::vector<float> radius{ vector_zeros<float>(x.size()) };
   std::vector<int> non_touching{};
-  std::vector<float> step_sizes{ vector_fill<float>(x.size(), step_size) }; 
+  std::vector<float> step_sizes{ vector_fill<float>(x.size(), max_step_size) };
+
+  // set the step size for each point to half the min distance
+  for (int i = 0; i < x.size(); i++) {
+    float min_dist = step_sizes[i];
+    auto other_class_points = diff_class_indexes[y[i]];
+    for (const auto& j : other_class_points) {
+      if (i != j) {
+        float dist = sqrt(rbf_basis(x[i], x[j]));
+        if (dist < min_dist)
+          min_dist = dist / 2.;
+      }
+    }
+    step_sizes[i] = min_dist;
+  }
+  
   int step = 0;
 
   while (vector_find_element<bool>(touching, false).size() > 0) {
@@ -160,20 +173,22 @@ std::vector<float> epsilon_expand(
     // expand neighbourhood for data points that are not touching
     non_touching = vector_find_element<bool>(touching, false);
     for (const auto& idx : non_touching) {
-      float step_size = step_sizes[idx];
+      float s = step_sizes[idx];
+      bool increase = true;
       // TODO: Make quicker than n^2
       for (const auto& jdx : non_touching) {
         if (idx != jdx && y[idx] != y[jdx]) {
           float dist = distance(x[idx], x[jdx], radius[idx], radius[jdx]);
-          if (dist < step_size) {
+          if (dist <= s) {
             touching[idx] = true;
             touching[jdx] = true;
-            step_size = dist;
-            break;
+            increase = false;
+            s = dist;
           }
         }
       }
-      radius[idx] += step_size;  // TODO check that neighbourhoods wouldn't overlap subject to increases.
+      if (increase)
+        radius[idx] += s;  // TODO check that neighbourhoods wouldn't overlap subject to increases.
     }
     
     // decay the step sizes using exponetial decay
@@ -194,31 +209,6 @@ std::vector<float> epsilon_expand(
 
   return radius;
 }
-
-/* 
- * PYTHON BINDINGS
- */
-py::array_t<float> wrapper(
-                           Mat x, 
-                           std::vector<int> y,
-                           float step_size = 0.0001,
-                           float epsilon   = 5.0,
-                           bool show_progress = false) 
-{
-  py::array result = py::cast(
-                              epsilon_expand(x, y, step_size, epsilon, show_progress));
-  return result;
-}
-
-
-PYBIND11_MODULE(adaptive_neighbourhoods, m)
-{
-  m.doc() = "Adaptive Neighbourhoods package";
-  m.def("epsilon_expand", &wrapper, "Generate the neighbourhoods",
-        py::arg("x"), py::arg("y"), py::arg("step_size") = 0.0001, py::arg("epsilon") = 5.0,
-        py::arg("show_progress") = false);
-}
-
 
 std::vector<std::vector<std::string>> read_csv(std::string filename, std::string delimiter = ",")
 {
@@ -246,33 +236,32 @@ std::vector<std::vector<std::string>> read_csv(std::string filename, std::string
   return data;
 }
 
+struct Iris {
+  std::vector<std::vector<float>> x;
+  std::vector<int> y;
+};
 
-int main(int argc, char** argv)
+Iris read_iris(std::string path)
 {
-  auto data = read_csv(argv[1]);
-  data = std::vector<std::vector<std::string>>(data.begin(), data.end()-1);
-  auto record = data[0];
-  std::cout << "First record:"
-            << "\n" << vector_print(record)
-            << std::endl;
+  auto data = read_csv(path);
+  
+  data = std::vector<std::vector<std::string>>(data.begin(), data.end()-1);  // remove the empty line
 
   Mat x{};
+  std::vector<float> row{};
   for (int i = 0; i < data.size(); i++) {
-    std::vector<float> row{};
+    row.clear();
     for (int j = 0; j < data[i].size()-1; j++) {
       row.push_back(0);
     }
     x.push_back(row);
   }
 
-  for (int row = 0; row < data.size(); row++)
-    for (int col = 0; col < data[row].size()-1; col++)
+  for (int row = 0; row < data.size(); row++) {
+    for (int col = 0; col < data[row].size()-1; col++) {
       x[row][col] = std::stof(data[row][col]);
-
-  std::cout << "First record of x"
-            << "\n" << vector_print(x[0])
-            << std::endl;
-
+    }
+  }
 
   const std::unordered_map<std::string, int> mapper {
     {"Iris-setosa", 0},
@@ -285,20 +274,66 @@ int main(int argc, char** argv)
     y.push_back(mapper.at(data[i][data[i].size()-1]));
   }
 
-  auto normed = vector_norm<int>(y);
+  Iris iris;
+  iris.x = x;
+  iris.y = y;
+  return iris;
+}
+
+int main(int argc, char** argv)
+{
+
+  auto iris = read_iris(argv[1]);
+
+  auto normed = vector_norm<int>(iris.y);
   std::cout << "Normed: " << normed << std::endl;
 
   std::cout << "Vector operations:"
-            << "\n- min: " << vector_min<int>(y)
-            << "\n- max: " << vector_max<int>(y)
-            << "\n- find elements: " << vector_print(vector_find_element<int>(y, 3.0))
-            << "\n- unique elements: " << vector_print(vector_unique(y))
+            << "\n- min: " << vector_min<int>(iris.y)
+            << "\n- max: " << vector_max<int>(iris.y)
+            << "\n- find elements: " << vector_print(vector_find_element<int>(iris.y, 3.0))
+            << "\n- unique elements: " << vector_print(vector_unique(iris.y))
             << std::endl;
 
-  std::vector<float> neighbourhoods = epsilon_expand(x, y, 0.0001, 5, true);
+  std::vector<float> neighbourhoods = epsilon_expand(iris.x, iris.y, 0.0001, 5, true);
   std::cout << "Neighbourhoods:"
             << "\n" << vector_print(neighbourhoods)
             << std::endl;
 
   return 0;
 }
+
+/* 
+ * PYTHON BINDINGS
+ */
+py::array_t<float> wrapper_epsilon(
+                                   Mat x, 
+                                   std::vector<int> y,
+                                   float max_step_size = 0.0001,
+                                   float epsilon   = 5.0,
+                                   bool show_progress = false) 
+{
+  py::array result = py::cast(epsilon_expand(x, y, max_step_size, epsilon, show_progress));
+  return result;
+}
+
+py::array_t<float> wrapper_compute_density(
+                                           Mat x,
+                                           std::vector<int> y,
+                                           float epsilon,
+                                           std::vector<std::vector<int>> same_class_indexes)
+{
+  py::array result = py::cast(compute_density(x, y, epsilon, same_class_indexes));
+  return result;
+}
+
+
+PYBIND11_MODULE(adaptive_neighbourhoods, m)
+{
+  m.doc() = "Adaptive Neighbourhoods package";
+  m.def("epsilon_expand", &wrapper_epsilon, "Generate the neighbourhoods",
+        py::arg("x"), py::arg("y"), py::arg("max_step_size") = 0.0001, py::arg("epsilon") = 5.0,
+        py::arg("show_progress") = false);
+  m.def("compute_density", &wrapper_compute_density);
+}
+
