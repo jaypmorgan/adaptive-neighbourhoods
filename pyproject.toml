@@ -32,4 +32,5 @@ dev = [
     "PyQt5",
     "torch",
     "torchvision",
+    "pyright"
 ]
