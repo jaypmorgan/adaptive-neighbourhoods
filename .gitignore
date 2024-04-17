@@ -133,7 +133,7 @@ dmypy.json
 .vscoce
 compile_commands.json
 .vscode/
-iris.data
-/tests/data/
 /eigen-3.3.7/
 /eigen.zip
+/tests/data/mnist/
+

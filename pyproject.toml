@@ -28,13 +28,7 @@ classifiers = [
 dev = [
     "pandas",
     "numpy",
-    "matplotlib",
-    "PyQt5",
-    "torch",
-    "torchvision",
-    "pyright",
     "requests",
-    "dfp",
     "build",
     "twine",
     "pytest",
