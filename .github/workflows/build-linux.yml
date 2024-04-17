@@ -8,7 +8,9 @@ jobs:
       - name: Update system
         run: sudo apt update
       - name: Make virtual environment
-        run: python -m venv venv
+        run: |
+          python -m venv venv
+          source venv/bin/activate
       - name: Install package
         run: make install
       - name: Test package
