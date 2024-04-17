@@ -15,7 +15,7 @@ upload:
 	python3 -m twine upload dist/*
 
 .PHONY: upload-test
-upload-test:
+upload-test: venv
 	python3 -m twine upload --repository testpypi dist/*
 
 .PHONY: test

@@ -19,4 +19,6 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_test_token }}
-        run: make upload-test
+        run: |
+          source venv/bin/activate
+          make upload-test
