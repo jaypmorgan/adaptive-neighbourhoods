@@ -5,9 +5,12 @@
 #include <cmath>
 #include <fstream>
 #include <random>
+#include <omp.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include <pybind11/eigen.h>
+#include "Eigen/src/Core/products/Parallelizer.h"
 #include "vector_ops.h"
 #include "radial_basis.h"
 
@@ -17,48 +20,81 @@
 namespace py = pybind11;
 
 // type alias
-using Vec = std::vector<float>;
-using Mat = std::vector<std::vector<float>>;
+using Vec = Eigen::VectorXf;
+using Mat = Eigen::MatrixXf;
+
+
+template <typename T>
+T euclidean_distance(Vec u, Vec v) {
+  return (u-v).norm();
+}
+
 
 bool is_intersecting(Vec u, Vec v, float r1, float r2)
 {
-  float distance = rbf_basis<float>(u, v);
+  float distance =  euclidean_distance<float>(u, v);
   return distance <= (r1+r2);
 }
 
-Vec compute_density(Mat x, std::vector<int> y, float epsilon, std::vector<std::vector<int>> same_class_indexes)
+std::vector<float> compute_density(
+                    Mat x,
+                    std::vector<int> y,
+                    float epsilon,
+                    std::vector<std::vector<int>> diff_class_indexes,
+                    bool show_progress = true)
 {
-  size_t n_samples = x.size();
-  Vec d = {};
-  float tmp_d = 0;
-  Vec xi;
-  Vec xj;
+  size_t n_samples = y.size();
+  Vec d(n_samples);
+  int done = 0;
 
+  Eigen::initParallel();
+  Eigen::setNbThreads(omp_get_max_threads());
+
+  Mat distance(n_samples, n_samples);
+#pragma omp parallel for
   for (size_t i = 0; i < n_samples; i++) {
-    tmp_d = 0;
-    auto xi = x[i];
-    auto yi = y[i];
-    auto same_class_index = same_class_indexes[yi];
-    for (auto& j : same_class_index) {
-      if (i != j)
-        tmp_d += rbf_inverse_multiquadric(xi, x.at(j), epsilon); 
+    for (size_t j = 0; j < n_samples; j++) {
+#pragma omp atomic write
+      distance(i, j) = (1.0 / sqrt(1.0 + pow(epsilon * (x.row(i)-x.row(j)).squaredNorm(), 2)));
     }
-    tmp_d = (tmp_d / same_class_index.size());
-    d.push_back(tmp_d);
+    if (show_progress)
+        std::cout << "\rComputing density: " << i << std::flush;
   }
 
-  return d;
+  // set the diagonal to zero so that it doesn't affect the sum
+  distance.diagonal().array() = 0.0;
+  
+#pragma omp parallel for
+  for (size_t i = 0; i < n_samples; i++) {
+    auto other_class_index = diff_class_indexes[y[i]];
+    for (const auto& j : other_class_index) {
+#pragma omp critical
+      distance(i, j) = 0;
+    }
+  }
+
+  Eigen::setNbThreads(0);
+
+  auto summed = distance.rowwise().sum();
+  std::vector<float> result{};
+  for (size_t i = 0; i < n_samples; i++) {
+    if (show_progress)
+      std::cout << "\rNormalising: " << i << std::flush;
+    result.push_back(summed(i) / (n_samples - diff_class_indexes[y[i]].size()));
+  }
+
+  return result;
 }
 
 
-float distance(std::vector<float> u, std::vector<float> v, float r1, float r2)
+float distance(Vec u, Vec v, float r1, float r2)
 {
-  return sqrt(rbf_basis(u, v)) - (r1 + r2);
+  return euclidean_distance<float>(u, v) - (r1 + r2);
 }
 
-bool intersects(std::vector<float> u, std::vector<float> v, float r1, float r2)
+bool intersects(Vec u, Vec v, float r1, float r2)
 {
-  float distance = sqrt(rbf_basis(u, v));
+  float distance = euclidean_distance<float>(u, v);
   return distance < (r1 + r2);
 }
 
@@ -68,23 +104,19 @@ std::vector<bool> is_touching(Mat x,
                               std::vector<bool> touching,
                               std::vector<std::vector<int>> diff_class_indexes)
 {
-  std::vector<float> xi;
-  std::vector<float> xj;
   float r1;
   float r2;
   int cls;
   std::vector<int> cls_indexes;
 
-  for (int i = 0; i < x.size(); i++) {
+  for (int i = 0; i < x.rows(); i++) {
     if (!touching[i]) {  // skip those that are already touching something
       cls = y[i];
       cls_indexes = diff_class_indexes[cls];
       for (const auto& j : cls_indexes) {
-        xi = x[i];
-        xj = x[j];
         r1 = radius[i];
         r2 = radius[j];
-        if (intersects(xi, xj, r1, r2)) {
+        if (intersects(x.row(i), x.row(j), r1, r2)) {
           touching[i] = true;
           touching[j] = true;
         }
@@ -123,40 +155,44 @@ std::vector<float> epsilon_expand(
     this_class = vector_find_element(y, cls);
     same_class_indexes.push_back(this_class);
     diff_this_class.clear();
-    for (int i = 0; i < x.size(); i++)
+    for (int i = 0; i < x.rows(); i++)
       if (!vector_in(this_class, i))
         diff_this_class.push_back(i);
     diff_class_indexes.push_back(diff_this_class);
   }
 
   // Calculate the density value for each point
-  std::vector<float> density = compute_density(x, y, epsilon, same_class_indexes);
+  auto density = compute_density(x, y, epsilon, diff_class_indexes);
 
 #ifdef DEBUG
   std::cout << "Density Information:" 
-            << "\n- maximum: " << vector_max<float>(density)
-            << "\n- minimum: " << vector_min<float>(density)
-            << "\n- mean:    " << vector_mean<float>(density)
+            << "\n- maximum: " << density.minCoeff()
+            << "\n- minimum: " << density.maxCoeff()
+            << "\n- mean:    " << density.mean()
             << std::endl;
 #endif
 
   // Expand the radii
-  std::vector<bool> touching{ vector_zeros<bool>(x.size()) };
-  std::vector<float> radius{ vector_zeros<float>(x.size()) };
+  std::vector<bool> touching{ vector_zeros<bool>(x.rows()) };
+  std::vector<float> radius{ vector_zeros<float>(x.rows()) };
   std::vector<int> non_touching{};
-  std::vector<float> step_sizes{ vector_fill<float>(x.size(), max_step_size) };
+  std::vector<float> step_sizes{ vector_fill<float>(x.rows(), max_step_size) };
 
   // set the step size for each point to half the min distance
-  for (int i = 0; i < x.size(); i++) {
+#pragma omp parallel for
+  for (int i = 0; i < x.rows(); i++) {
+    if (show_progress)
+      std::cout << "\rComputing step size: " << i << std::flush;
     float min_dist = step_sizes[i];
     auto other_class_points = diff_class_indexes[y[i]];
     for (const auto& j : other_class_points) {
       if (i != j) {
-        float dist = sqrt(rbf_basis(x[i], x[j]));
+        float dist = euclidean_distance<float>(x.row(i), x.row(j));
         if (dist < min_dist)
           min_dist = dist / 2.;
       }
     }
+#pragma atomic write
     step_sizes[i] = min_dist;
   }
   
@@ -164,7 +200,6 @@ std::vector<float> epsilon_expand(
 
   while (vector_find_element<bool>(touching, false).size() > 0) {
     touching = is_touching(x, y, radius, touching, diff_class_indexes);  // find which data points overlap
-
     // set touching for those with step below threshold
     for (int i = 0; i < touching.size(); i++)
       if (step_sizes [i] < 1e-15)
@@ -176,20 +211,25 @@ std::vector<float> epsilon_expand(
       float s = step_sizes[idx];
       bool increase = true;
       // TODO: Make quicker than n^2
+      Eigen::setNbThreads(omp_get_max_threads());
+
+#pragma omp parallel for
       for (const auto& jdx : non_touching) {
         if (idx != jdx && y[idx] != y[jdx]) {
-          float dist = distance(x[idx], x[jdx], radius[idx], radius[jdx]);
+          float dist = distance(x.row(idx), x.row(jdx), radius[idx], radius[jdx]);
           if (dist <= s) {
-            touching[idx] = true;
-            touching[jdx] = true;
-            increase = false;
-            s = dist;
+#pragma atomic write
+            touching[idx] = true, touching[jdx] = true, increase = false, s = dist;
           }
         }
       }
+
+      Eigen::setNbThreads(0);
+      
       if (increase)
         radius[idx] += s;  // TODO check that neighbourhoods wouldn't overlap subject to increases.
     }
+
     
     // decay the step sizes using exponetial decay
     for (size_t i = 0; i < density.size(); i++) {
@@ -198,7 +238,7 @@ std::vector<float> epsilon_expand(
 
     step++;
     if (show_progress)
-      std::cout << "\rStep: " << step 
+      std::cout << "\rExpanding Neighbourhoods Step: " << step 
                 << " Number of touching " << vector_find_element(touching, true).size()
                 <<"  Max radius " << vector_max(radius) 
                 << std::flush;
@@ -237,7 +277,7 @@ std::vector<std::vector<std::string>> read_csv(std::string filename, std::string
 }
 
 struct Iris {
-  std::vector<std::vector<float>> x;
+  Mat x;
   std::vector<int> y;
 };
 
@@ -247,21 +287,11 @@ Iris read_iris(std::string path)
   
   data = std::vector<std::vector<std::string>>(data.begin(), data.end()-1);  // remove the empty line
 
-  Mat x{};
-  std::vector<float> row{};
-  for (int i = 0; i < data.size(); i++) {
-    row.clear();
-    for (int j = 0; j < data[i].size()-1; j++) {
-      row.push_back(0);
-    }
-    x.push_back(row);
-  }
+  Mat x(150, 4);
 
-  for (int row = 0; row < data.size(); row++) {
-    for (int col = 0; col < data[row].size()-1; col++) {
-      x[row][col] = std::stof(data[row][col]);
-    }
-  }
+  for (int row = 0; row < data.size(); row++)
+    for (int col = 0; col < data[row].size()-1; col++)
+      x(row,col) = std::stof(data[row][col]);
 
   const std::unordered_map<std::string, int> mapper {
     {"Iris-setosa", 0},
@@ -270,9 +300,8 @@ Iris read_iris(std::string path)
   };
 
   std::vector<int> y{};
-  for (int i = 0; i < data.size(); i++) {
+  for (int i = 0; i < data.size(); i++)
     y.push_back(mapper.at(data[i][data[i].size()-1]));
-  }
 
   Iris iris;
   iris.x = x;
@@ -282,8 +311,9 @@ Iris read_iris(std::string path)
 
 int main(int argc, char** argv)
 {
-
   auto iris = read_iris(argv[1]);
+
+  std::cout << iris.x << std::endl;
 
   auto normed = vector_norm<int>(iris.y);
   std::cout << "Normed: " << normed << std::endl;
@@ -291,7 +321,7 @@ int main(int argc, char** argv)
   std::cout << "Vector operations:"
             << "\n- min: " << vector_min<int>(iris.y)
             << "\n- max: " << vector_max<int>(iris.y)
-            << "\n- find elements: " << vector_print(vector_find_element<int>(iris.y, 3.0))
+            << "\n- find elements: " << vector_print(vector_find_element<int>(iris.y, 2.0))
             << "\n- unique elements: " << vector_print(vector_unique(iris.y))
             << std::endl;
 
@@ -307,7 +337,7 @@ int main(int argc, char** argv)
  * PYTHON BINDINGS
  */
 py::array_t<float> wrapper_epsilon(
-                                   Mat x, 
+                                   Mat x,
                                    std::vector<int> y,
                                    float max_step_size = 0.0001,
                                    float epsilon   = 5.0,
@@ -321,9 +351,9 @@ py::array_t<float> wrapper_compute_density(
                                            Mat x,
                                            std::vector<int> y,
                                            float epsilon,
-                                           std::vector<std::vector<int>> same_class_indexes)
+                                           std::vector<std::vector<int>> diff_class_indexes)
 {
-  py::array result = py::cast(compute_density(x, y, epsilon, same_class_indexes));
+  py::array result = py::cast(compute_density(x, y, epsilon, diff_class_indexes));
   return result;
 }
 
@@ -334,6 +364,7 @@ PYBIND11_MODULE(adaptive_neighbourhoods, m)
   m.def("epsilon_expand", &wrapper_epsilon, "Generate the neighbourhoods",
         py::arg("x"), py::arg("y"), py::arg("max_step_size") = 0.0001, py::arg("epsilon") = 5.0,
         py::arg("show_progress") = false);
-  m.def("compute_density", &wrapper_compute_density);
+  m.def("compute_density", &wrapper_compute_density, "Compute the density value for each point.",
+        py::arg("x"), py::arg("y"), py::arg("epsilon"), py::arg("diff_class_indexes"));
 }
 

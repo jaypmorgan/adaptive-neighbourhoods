@@ -134,3 +134,6 @@ dmypy.json
 compile_commands.json
 .vscode/
 iris.data
+/tests/data/
+/eigen-3.3.7/
+/eigen.zip

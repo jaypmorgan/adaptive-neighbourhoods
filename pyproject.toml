@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adaptive_neighbourhoods"
-version = "0.0.4"
+version = "0.1.0"
 authors = [
   {name="Jay Paul Morgan", email="j.p.morgan@swansea.ac.uk"},
   {name="Adeline Paiement"},
@@ -32,4 +32,7 @@ dev = [
     "PyQt5",
     "torch",
     "torchvision",
+    "pyright",
+    "requests",
+    "dfp",
 ]
