@@ -5,8 +5,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      - name: Update system
-        run: sudo apt update
       - name: Build and test package
         run: |
           python -m venv venv
@@ -18,7 +16,7 @@ jobs:
           source venv/bin/activate
           python -m build --sdist
       - name: Upload test
-        run: |
+        env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_test_token }}
-          make upload-test
+        run: make upload-test
