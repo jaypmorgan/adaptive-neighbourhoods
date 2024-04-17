@@ -7,6 +7,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Update system
         run: sudo apt update
+      - name: Make virtual environment
+        run: python -m venv venv
       - name: Install package
         run: make install
       - name: Test package
