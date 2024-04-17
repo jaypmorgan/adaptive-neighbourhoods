@@ -12,7 +12,7 @@ y = np.array([mapper[i] for i in iris['species'].tolist()])
 
 same_class_indexes = []
 for i in range(3):
-    same_class_indexes.append([j for j in range(150) if y[j] == i])
+    same_class_indexes.append([j for j in range(150) if y[j] != i])
 
 density = adpt.compute_density(x, y, 5, same_class_indexes)
 radius = adpt.epsilon_expand(x[:, 0:2], y, max_step_size=0.05, show_progress=True)

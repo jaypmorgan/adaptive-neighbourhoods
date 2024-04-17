@@ -1,5 +1,7 @@
 add_requires("python")
 add_requires("pybind11")
+add_requires("eigen")
+add_requires("openmp")
 
 target("main")
     set_kind("binary")
@@ -8,3 +10,5 @@ target("main")
     set_languages("c++11")
     add_packages("python")
     add_packages("pybind11")
+    add_packages("eigen")
+    add_packages("openmp")
