@@ -19,7 +19,7 @@ if not os.path.exists(EIGEN3_DIRNAME):
 ext_modules = [
     Pybind11Extension(
         "adaptive_neighbourhoods",
-        sorted(glob("src/*.cpp"))+sorted(glob("src/*.h")),
+        sorted(glob("src/*.cpp")),
         include_dirs=[EIGEN3_DIRNAME],
         extra_compile_args=["-fopenmp", "-O2"],
         extra_link_args=['-lgomp'],
@@ -28,4 +28,5 @@ ext_modules = [
 
 setup(
     ext_modules=ext_modules,
+    headers=["src/vector_ops.h", "src/radial_basis.h"],
 )
