@@ -40,8 +40,7 @@ std::vector<float> compute_density(
                     Mat x,
                     std::vector<int> y,
                     float epsilon,
-                    std::vector<std::vector<int>> diff_class_indexes,
-                    bool show_progress = true)
+                    std::vector<std::vector<int>> diff_class_indexes)
 {
   size_t n_samples = y.size();
   Vec d(n_samples);
@@ -51,15 +50,11 @@ std::vector<float> compute_density(
   Eigen::setNbThreads(omp_get_max_threads());
 
   Mat distance(n_samples, n_samples);
-#pragma omp parallel for
-  for (size_t i = 0; i < n_samples; i++) {
-    for (size_t j = 0; j < n_samples; j++) {
+#pragma omp parallel for collapse(2)
+  for (size_t i = 0; i < n_samples; i++)
+    for (size_t j = 0; j < n_samples; j++)
 #pragma omp atomic write
       distance(i, j) = (1.0 / sqrt(1.0 + pow(epsilon * (x.row(i)-x.row(j)).squaredNorm(), 2)));
-    }
-    if (show_progress)
-        std::cout << "\rComputing density: " << i << std::flush;
-  }
 
   // set the diagonal to zero so that it doesn't affect the sum
   distance.diagonal().array() = 0.0;
@@ -78,8 +73,6 @@ std::vector<float> compute_density(
   auto summed = distance.rowwise().sum();
   std::vector<float> result{};
   for (size_t i = 0; i < n_samples; i++) {
-    if (show_progress)
-      std::cout << "\rNormalising: " << i << std::flush;
     result.push_back(summed(i) / (n_samples - diff_class_indexes[y[i]].size()));
   }
 

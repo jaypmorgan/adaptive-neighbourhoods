@@ -35,4 +35,7 @@ dev = [
     "pyright",
     "requests",
     "dfp",
+    "build",
+    "twine",
+    "pytest",
 ]
