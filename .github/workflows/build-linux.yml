@@ -11,6 +11,7 @@ jobs:
         run: |
           python -m venv venv
           source venv/bin/activate
+          make install
       - name: Install package
         run: make install
       - name: Test package
