@@ -22,3 +22,10 @@ jobs:
         run: |
           source venv/bin/activate
           make upload-test
+      - name: Upload
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_token }}
+        run: |
+          source venv/bin/activate
+          make upload

@@ -12,11 +12,11 @@ build:
 
 .PHONY: upload
 upload:
-	python3 -m twine upload dist/*
+	python3 -m twine upload dist/* --skip-existing
 
 .PHONY: upload-test
 upload-test: venv
-	python3 -m twine upload --repository testpypi dist/*
+	python3 -m twine upload --repository testpypi dist/* --skip-existing
 
 .PHONY: test
 test:
