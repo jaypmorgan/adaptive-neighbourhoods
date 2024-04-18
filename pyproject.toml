@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adaptive_neighbourhoods"
-version = "0.1.0"
+version = "0.1.2"
 authors = [
   {name="Jay Paul Morgan", email="j.p.morgan@swansea.ac.uk"},
   {name="Adeline Paiement"},
@@ -28,11 +28,8 @@ classifiers = [
 dev = [
     "pandas",
     "numpy",
-    "matplotlib",
-    "PyQt5",
-    "torch",
-    "torchvision",
-    "pyright",
     "requests",
-    "dfp",
+    "build",
+    "twine",
+    "pytest",
 ]

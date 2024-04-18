@@ -4,7 +4,7 @@ docs:
 
 .PHONY: install
 install:
-	python3 -m pip install -e .
+	python3 -m pip install -e .[dev]
 
 .PHONY: build
 build:
@@ -12,8 +12,12 @@ build:
 
 .PHONY: upload
 upload:
-	python3 -m twine upload dist/*
+	python3 -m twine upload dist/* --skip-existing
 
 .PHONY: upload-test
-upload-test:
-	python3 -m twine upload --repository testpypi dist/*
+upload-test: venv
+	python3 -m twine upload --repository testpypi dist/* --skip-existing
+
+.PHONY: test
+test:
+	python3 -m pytest

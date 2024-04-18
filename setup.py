@@ -28,4 +28,5 @@ ext_modules = [
 
 setup(
     ext_modules=ext_modules,
+    headers=["src/vector_ops.h", "src/radial_basis.h"],
 )

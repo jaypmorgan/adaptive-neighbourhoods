@@ -1,0 +1,31 @@
+name: Build Linux
+on: ['push']
+jobs:
+  test_linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and test package
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          make install
+          make test
+      - name: Build distribution
+        run: |
+          source venv/bin/activate
+          python -m build --sdist
+      - name: Upload test
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_test_token }}
+        run: |
+          source venv/bin/activate
+          make upload-test
+      - name: Upload
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_token }}
+        run: |
+          source venv/bin/activate
+          make upload
