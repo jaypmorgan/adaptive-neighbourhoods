@@ -11,8 +11,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include "Eigen/src/Core/products/Parallelizer.h"
-#include "vector_ops.h"
-#include "radial_basis.h"
+#include "src/vector_ops.h"
+#include "src/radial_basis.h"
 
 // # define DEBUG
 
