@@ -5,12 +5,12 @@
 #include <cmath>
 #include <fstream>
 #include <random>
-#include <omp.h>
+// #include <omp.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include "Eigen/src/Core/products/Parallelizer.h"
+//#include "Eigen/src/Core/products/Parallelizer.h"
 #include "vector_ops.h"
 #include "radial_basis.h"
 
@@ -46,29 +46,29 @@ std::vector<float> compute_density(
   Vec d(n_samples);
   int done = 0;
 
-  Eigen::initParallel();
-  Eigen::setNbThreads(omp_get_max_threads());
+  //  Eigen::initParallel();
+  //Eigen::setNbThreads(omp_get_max_threads());
 
   Mat distance(n_samples, n_samples);
-#pragma omp parallel for collapse(2)
+  //#pragma omp parallel for collapse(2)
   for (size_t i = 0; i < n_samples; i++)
     for (size_t j = 0; j < n_samples; j++)
-#pragma omp atomic write
+      //#pragma omp atomic write
       distance(i, j) = (1.0 / sqrt(1.0 + pow(epsilon * (x.row(i)-x.row(j)).squaredNorm(), 2)));
 
   // set the diagonal to zero so that it doesn't affect the sum
   distance.diagonal().array() = 0.0;
   
-#pragma omp parallel for
+  //#pragma omp parallel for
   for (size_t i = 0; i < n_samples; i++) {
     auto other_class_index = diff_class_indexes[y[i]];
     for (const auto& j : other_class_index) {
-#pragma omp critical
+      //#pragma omp critical
       distance(i, j) = 0;
     }
   }
 
-  Eigen::setNbThreads(0);
+  //  Eigen::setNbThreads(0);
 
   auto summed = distance.rowwise().sum();
   std::vector<float> result{};
@@ -172,7 +172,7 @@ std::vector<float> epsilon_expand(
   std::vector<float> step_sizes{ vector_fill<float>(x.rows(), max_step_size) };
 
   // set the step size for each point to half the min distance
-#pragma omp parallel for
+  //#pragma omp parallel for
   for (int i = 0; i < x.rows(); i++) {
     if (show_progress)
       std::cout << "\rComputing step size: " << i << std::flush;
@@ -185,7 +185,7 @@ std::vector<float> epsilon_expand(
           min_dist = dist / 2.;
       }
     }
-#pragma atomic write
+    //#pragma atomic write
     step_sizes[i] = min_dist;
   }
   
@@ -204,20 +204,20 @@ std::vector<float> epsilon_expand(
       float s = step_sizes[idx];
       bool increase = true;
       // TODO: Make quicker than n^2
-      Eigen::setNbThreads(omp_get_max_threads());
+      //Eigen::setNbThreads(omp_get_max_threads());
 
-#pragma omp parallel for
+      //#pragma omp parallel for
       for (const auto& jdx : non_touching) {
         if (idx != jdx && y[idx] != y[jdx]) {
           float dist = distance(x.row(idx), x.row(jdx), radius[idx], radius[jdx]);
           if (dist <= s) {
-#pragma atomic write
+            //#pragma atomic write
             touching[idx] = true, touching[jdx] = true, increase = false, s = dist;
           }
         }
       }
 
-      Eigen::setNbThreads(0);
+      //Eigen::setNbThreads(0);
       
       if (increase)
         radius[idx] += s;  // TODO check that neighbourhoods wouldn't overlap subject to increases.

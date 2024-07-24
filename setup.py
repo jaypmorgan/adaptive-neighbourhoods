@@ -21,8 +21,8 @@ ext_modules = [
         "adaptive_neighbourhoods",
         sorted(glob("src/*.cpp")),
         include_dirs=[EIGEN3_DIRNAME],
-        extra_compile_args=["-fopenmp", "-O2"],
-        extra_link_args=['-lgomp'],
+        # extra_compile_args=["-fopenmp", "-O2"],
+        # extra_link_args=['-lomp'],
     ),
 ]
 
